@@ -1,6 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const getApiKey = () => {
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  return typeof apiKey === 'string' ? apiKey : '';
+};
 
 // --- Mock Knowledge Base (Simplified for Context) ---
 const KNOWLEDGE_BASE = {
@@ -38,6 +41,13 @@ export const generateGTMResponse = async (
   history: { role: string; text: string }[]
 ): Promise<string> => {
   try {
+    const apiKey = getApiKey();
+    if (!apiKey) {
+      return JSON.stringify({ text: "智能助手未配置密钥，请设置 VITE_GEMINI_API_KEY。" });
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
     const systemInstruction = `
       You are an intelligent GTM (Go-To-Market) Assistant for Lark (Feishu).
       
@@ -74,7 +84,7 @@ export const generateGTMResponse = async (
     `;
 
     const chat = ai.chats.create({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       config: {
         responseMimeType: "application/json", // Enforce JSON response
         systemInstruction: systemInstruction,
